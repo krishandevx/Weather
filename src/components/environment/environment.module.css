@@ -1,0 +1,132 @@
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-scene-day);
+  transition: background var(--tr-slow) var(--ease-out);
+}
+.night .veil {
+  background: var(--bg-scene-night);
+}
+
+/* Day / night celestial body */
+.celestial {
+  position: absolute;
+  top: 9%;
+  right: 12%;
+  width: 20rem;
+  height: 20rem;
+  border-radius: 50%;
+  filter: blur(6px);
+  opacity: 0.6;
+}
+.sunDisk {
+  background: radial-gradient(circle, rgba(255, 214, 130, 0.65) 0%, rgba(255, 214, 130, 0) 62%);
+  animation: sunGlow 9s ease-in-out infinite;
+}
+.moonDisk {
+  background: radial-gradient(circle, rgba(190, 210, 255, 0.5) 0%, rgba(160, 180, 255, 0) 62%);
+}
+@keyframes sunGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.75;
+  }
+}
+
+/* Drifting clouds */
+.cloud {
+  position: absolute;
+  border-radius: 50%;
+  background: color-mix(in srgb, #ffffff 30%, transparent);
+  filter: blur(26px);
+  opacity: 0.7;
+}
+.cloud1 {
+  width: 34rem;
+  height: 7rem;
+  top: 18%;
+  left: -8rem;
+  animation: drift 70s linear infinite;
+}
+.cloud2 {
+  width: 26rem;
+  height: 6rem;
+  top: 8%;
+  left: 30%;
+  animation: drift 95s linear infinite 14s;
+  opacity: 0.45;
+}
+.cloud3 {
+  width: 30rem;
+  height: 6.5rem;
+  top: 32%;
+  left: 60%;
+  animation: drift 82s linear infinite 34s;
+  opacity: 0.3;
+}
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(120vw);
+  }
+}
+.night .cloud {
+  background: color-mix(in srgb, #33416b 55%, transparent);
+}
+
+/* Very restrained storm flash */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  animation: flashCycle 11s ease-in-out infinite;
+}
+@keyframes flashCycle {
+  0%,
+  90%,
+  100% {
+    opacity: 0;
+  }
+  92% {
+    opacity: 0.07;
+  }
+  94% {
+    opacity: 0;
+  }
+  96% {
+    opacity: 0.04;
+  }
+}
+
+/* Star field (night) */
+.stars {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-size: 260px 260px;
+  opacity: 0.55;
+}
+
+/* Particle canvases */
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

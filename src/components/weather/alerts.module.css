@@ -1,0 +1,39 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.alert {
+  display: flex;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--warn) 10%, var(--surface-soft));
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--surface-border));
+}
+
+.alertIcon {
+  color: var(--warn);
+  flex: none;
+  margin-top: 1px;
+}
+
+.alertBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.alertTitle {
+  font-weight: 640;
+  font-size: 0.875rem;
+}
+
+.alertDesc {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+}

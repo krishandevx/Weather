@@ -1,13 +1,11 @@
-import './App.css' 
-import WeatherApp from "./WeatherApp"
+import { AppProvider } from './state/appContext'
+import Dashboard from './components/layout/Dashboard'
 
 function App() {
-
-  
   return (
-    <>
-    <WeatherApp />
-    </>
+    <AppProvider>
+      <Dashboard />
+    </AppProvider>
   )
 }
 

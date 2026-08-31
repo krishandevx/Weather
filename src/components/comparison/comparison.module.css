@@ -1,0 +1,168 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.suggestRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.suggest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-soft);
+  color: var(--text-2);
+  border-radius: var(--radius-pill);
+  padding: 0.32rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color var(--tr-fast) var(--ease-out), color var(--tr-fast) var(--ease-out);
+}
+.suggest:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.scroll {
+  overflow-x: auto;
+  margin-inline: -0.25rem;
+  padding: 0.25rem;
+  scrollbar-width: thin;
+}
+
+.table {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: stretch;
+  min-width: max-content;
+}
+
+.labelCol {
+  display: flex;
+  flex-direction: column;
+  width: 6.5rem;
+  flex: none;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 8.5rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-soft);
+  transition: border-color var(--tr-fast) var(--ease-out);
+}
+.colActive {
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent);
+}
+
+.headCell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+}
+
+.headCellActive {
+  background: var(--accent-soft);
+}
+
+.cityName {
+  font-weight: 620;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--text-1);
+  font-family: inherit;
+  text-align: left;
+}
+
+.citySub {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--text-3);
+  font-weight: 480;
+}
+
+.removeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.removeBtn:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+.cellLabel {
+  padding: 0.55rem 0.9rem 0.55rem 0.1rem;
+  font-size: 0.75rem;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 560;
+  white-space: nowrap;
+}
+
+.cell {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 560;
+  white-space: nowrap;
+  text-align: left;
+  border-top: 1px solid var(--surface-border);
+}
+
+.addCell {
+  opacity: 0.55;
+  font-weight: 480;
+  color: var(--text-3);
+}
+
+.placeholder {
+  text-align: center;
+  padding: var(--sp-6) 0;
+  color: var(--text-3);
+  font-size: 0.875rem;
+}
+
+.emptyHint {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  margin-top: 0.25rem;
+}
+
+.aqiDot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-right: 0.35rem;
+  vertical-align: 1px;
+}
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}

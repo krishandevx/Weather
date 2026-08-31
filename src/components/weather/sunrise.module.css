@@ -1,0 +1,112 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.arcBase {
+  fill: none;
+  stroke: var(--surface-border-strong);
+  stroke-width: 2;
+}
+
+.dayArea {
+  fill: url(#sun-area-grad);
+  opacity: 0.7;
+}
+
+.sunTrack {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.sunDot {
+  fill: #fbbf24;
+  stroke: #fff;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 6px rgba(251, 191, 36, 0.55));
+}
+
+.sunPulse {
+  fill: #fbbf24;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 2.6s var(--ease-out) infinite;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(0.25);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.horizon {
+  stroke: var(--surface-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.marker {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  fill: var(--text-3);
+}
+
+.endPoints {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: -0.4rem;
+}
+
+.endLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  color: var(--text-3);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.endTime {
+  color: var(--text-1);
+  font-size: 0.9375rem;
+  font-weight: 620;
+}
+
+.status {
+  margin-top: var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8125rem;
+  font-weight: 560;
+}
+
+.night .sunDot {
+  fill: #a5b4fc;
+  filter: none;
+}
+.night .status {
+  background: var(--surface-soft);
+  color: var(--text-2);
+}

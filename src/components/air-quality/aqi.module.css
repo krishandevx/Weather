@@ -1,0 +1,72 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.gaugeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.gauge {
+  flex: none;
+}
+
+.value {
+  font-size: 2rem;
+  font-weight: 640;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.category {
+  font-weight: 600;
+}
+
+.note {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  max-width: 24ch;
+}
+
+.components {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.comp {
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--surface-border);
+}
+
+.compLabel {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+.compValue {
+  font-size: 0.9375rem;
+  font-weight: 620;
+  margin-top: 0.15rem;
+}
+
+.compUnit {
+  font-size: 0.6875rem;
+  color: var(--text-3);
+  font-weight: 480;
+}
+
+@media (max-width: 480px) {
+  .gaugeRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
