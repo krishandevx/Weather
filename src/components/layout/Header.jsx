@@ -31,11 +31,12 @@ function UnitsToggle() {
 }
 
 export default function Header() {
-  const { location, isDark, toggleTheme } = useApp()
+  const { location, isDark, toggleTheme, geoStatus } = useApp()
   const { isFetching } = useWeather(location)
   const { status, locate } = useGeolocation()
-  const locating = status === GeoStatus.LOCATING
+  const locating = status === GeoStatus.LOCATING || geoStatus === 'locating'
   const live = isFetching ? 'Updating' : 'Live'
+  const geoDenied = geoStatus === 'denied'
 
   return (
     <header className={styles.header}>
@@ -60,9 +61,9 @@ export default function Header() {
           <UnitsToggle />
           <button
             type="button"
-            className="icon-btn"
-            aria-label="Use my location"
-            title="Use my location"
+            className={`icon-btn ${geoDenied ? styles.geoDenied : ''}`}
+            aria-label={geoDenied ? 'Location access denied — click to retry' : 'Use my location'}
+            title={geoDenied ? 'Location access denied. Click to retry.' : 'Use my location'}
             onClick={locate}
             disabled={locating}
           >

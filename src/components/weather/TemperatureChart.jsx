@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useApp } from '../../state/appContext'
 import { formatTemp, formatTime } from '../../lib/format'
-import { EASE, SPRING } from '../../lib/motion'
+import { EASE } from '../../lib/motion'
 import Skeleton from '../ui/Skeleton'
 import styles from './chart.module.css'
 
@@ -29,41 +29,59 @@ function smoothPath(pts) {
 export default function TemperatureChart({ series, timezoneOffset, isLoading }) {
   const { units } = useApp()
   const wrapRef = useRef(null)
+  const fillObserver = useRef(null)
   const [width, setWidth] = useState(0)
   const [hoverIdx, setHoverIdx] = useState(null)
 
-  useEffect(() => {
-    const el = wrapRef.current
-    if (!el) return undefined
-    const ro = new ResizeObserver(() => setWidth(Math.round(el.clientWidth)))
+  // Measure the chart once its wrapper is actually mounted. A callback ref
+  // guarantees ResizeObserver is attached even when the wrapper renders late
+  // (e.g. after leaving the skeleton state).
+  const measureRef = useCallback((el) => {
+    wrapRef.current = el
+    if (fillObserver.current) {
+      fillObserver.current.disconnect()
+      fillObserver.current = null
+    }
+    if (!el) return
+    const ro = new ResizeObserver(() => setWidth(Math.round(el.clientWidth || 0)))
+    fillObserver.current = ro
     ro.observe(el)
-    setWidth(Math.round(el.clientWidth))
-    return () => ro.disconnect()
+    setWidth(Math.round(el.clientWidth || 0))
   }, [])
+
+  useEffect(() => () => fillObserver.current?.disconnect(), [])
 
   const model = useMemo(
     () => (width > 0 && series.length >= 2 ? buildModel(series, width) : null),
     [series, width],
   )
 
-  if (isLoading && series.length === 0) {
-    return (
-      <div aria-hidden>
-        <Skeleton height="13rem" />
-      </div>
-    )
-  }
-  if (!model) {
-    return (
-      <div style={{ minHeight: '13rem' }} aria-hidden>
-        <Skeleton height="13rem" />
-      </div>
-    )
-  }
-  if (series.length < 2) {
+  if (series.length < 2 && !isLoading) {
     return <div className={styles.empty}>Not enough forecast data to chart.</div>
   }
 
+  return (
+    <div className={styles.wrap} ref={measureRef}>
+      {!model ? (
+        <div style={{ minHeight: '13rem' }} aria-hidden>
+          <Skeleton height="13rem" />
+        </div>
+      ) : (
+        <ChartInner
+          series={series}
+          model={model}
+          width={width}
+          timezoneOffset={timezoneOffset}
+          units={units}
+          hoverIdx={hoverIdx}
+          setHoverIdx={setHoverIdx}
+        />
+      )}
+    </div>
+  )
+}
+
+function ChartInner({ model, width, timezoneOffset, units, hoverIdx, setHoverIdx }) {
   const { pts, yTicks, xTicks, nowIdx, areaPath, linePath } = model
   const tip = hoverIdx != null ? pts[hoverIdx] : null
 
@@ -73,7 +91,7 @@ export default function TemperatureChart({ series, timezoneOffset, isLoading }) 
   }
 
   return (
-    <div className={styles.wrap} ref={wrapRef}>
+    <>
       <svg
         className={styles.svg}
         viewBox={`0 0 ${width} ${H}`}
@@ -129,6 +147,7 @@ export default function TemperatureChart({ series, timezoneOffset, isLoading }) 
           stroke="url(#chart-line)"
           strokeWidth={2.5}
           strokeLinecap="round"
+          pathLength="1"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
           transition={{ duration: 1.2, ease: EASE }}
@@ -162,24 +181,24 @@ export default function TemperatureChart({ series, timezoneOffset, isLoading }) 
       </svg>
 
       {tip && (
-        <motion.div
+        <div
           className={styles.tooltip}
-          animate={{ left: tip.x, top: tip.y }}
-          transition={{ left: SPRING, top: SPRING }}
+          style={{ left: tip.x, top: tip.y }}
         >
           <span className={styles.tooltipTime}>
             {formatTime(tip.dt, timezoneOffset, { hour: 'numeric', minute: '2-digit' })}
           </span>
           <span className={styles.tooltipTemp}>{formatTemp(tip.temp, units)}</span>
-        </motion.div>
+        </div>
       )}
-    </div>
+    </>
   )
 }
 
 function buildModel(series, width) {
   const w = Math.max(300, width)
   const temps = series.map((s) => s.temp).filter((t) => t != null)
+  if (temps.length === 0) return null
   const rawMin = Math.min(...temps)
   const rawMax = Math.max(...temps)
   const pad = Math.max(1, (rawMax - rawMin) * 0.15)
@@ -195,7 +214,10 @@ function buildModel(series, width) {
     y: PAD.top + (1 - (s.temp - yMin) / (yMax - yMin)) * innerH,
   }))
 
-  const yTicks = Array.from({ length: 4 }, (_, i) => yMin + ((yMax - yMin) * i) / 3)
+  const yTicks = Array.from({ length: 4 }, (_, i) => {
+    const v = yMin + ((yMax - yMin) * i) / 3
+    return { v, y: PAD.top + (1 - (v - yMin) / (yMax - yMin)) * innerH }
+  })
   const step = Math.max(1, Math.floor(series.length / 6))
   const xTicks = series
     .map((s, i) => ({ dt: s.dt, x: pts[i].x }))

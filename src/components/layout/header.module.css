@@ -135,6 +135,25 @@
   }
 }
 
+.geoDenied {
+  color: var(--warn) !important;
+  animation: shake 0.5s ease;
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-3px);
+  }
+  40%,
+  80% {
+    transform: translateX(3px);
+  }
+}
+
 @media (max-width: 760px) {
   .inner {
     grid-template-columns: auto 1fr;

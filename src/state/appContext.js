@@ -1,5 +1,6 @@
-import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_LOCATION, DEFAULT_UNITS, STORAGE_KEYS } from '../config/constants'
+import { reverseGeocode } from '../api/weatherApi'
 
 const AppContext = createContext(null)
 
@@ -30,6 +31,10 @@ function initialLocation() {
   return DEFAULT_LOCATION
 }
 
+function hasSavedLocation() {
+  return isPlace(readJson(STORAGE_KEYS.lastLocation))
+}
+
 function initialUnits() {
   const v = localStorage.getItem(STORAGE_KEYS.units)
   return v === 'imperial' || v === 'metric' ? v : DEFAULT_UNITS
@@ -50,15 +55,63 @@ export function AppProvider({ children }) {
   const [location, _setLocation] = useState(initialLocation)
   const [units, _setUnits] = useState(initialUnits)
   const [theme, _setTheme] = useState(initialTheme)
+  const [geoStatus, setGeoStatus] = useState('idle')
+  const geoTriedRef = useRef(false)
 
   useEffect(() => {
     applyTheme(theme)
   }, [theme])
 
+  // Auto-detect location on first visit (no saved location).
+  useEffect(() => {
+    if (geoTriedRef.current) return
+    if (hasSavedLocation()) {
+      setGeoStatus('skipped')
+      return
+    }
+    if (!('geolocation' in navigator)) {
+      setGeoStatus('unsupported')
+      return
+    }
+    geoTriedRef.current = true
+    setGeoStatus('locating')
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords
+        let place = null
+        try {
+          place = await reverseGeocode({ lat: latitude, lon: longitude })
+        } catch {
+          place = null
+        }
+        const next = {
+          name: place?.name ?? 'My location',
+          state: place?.state ?? null,
+          country: place?.country ?? '',
+          lat: latitude,
+          lon: longitude,
+        }
+        _setLocation(next)
+        try {
+          localStorage.setItem(STORAGE_KEYS.lastLocation, JSON.stringify(next))
+        } catch {
+          /* storage unavailable */
+        }
+        setGeoStatus('ok')
+      },
+      () => {
+        setGeoStatus('denied')
+      },
+      { timeout: 8000, maximumAge: 300000, enableHighAccuracy: false },
+    )
+  }, [])
+
   const setLocation = useCallback((place) => {
     if (!isPlace(place)) return
     const next = { name: place.name ?? 'Selected location', ...place }
     _setLocation(next)
+    setGeoStatus('manual')
     try {
       localStorage.setItem(STORAGE_KEYS.lastLocation, JSON.stringify(next))
     } catch {
@@ -88,8 +141,17 @@ export function AppProvider({ children }) {
   }, [])
 
   const value = useMemo(
-    () => ({ location, setLocation, units, setUnits, theme, toggleTheme, isDark: theme === 'dark' }),
-    [location, setLocation, units, setUnits, theme, toggleTheme],
+    () => ({
+      location,
+      setLocation,
+      units,
+      setUnits,
+      theme,
+      toggleTheme,
+      isDark: theme === 'dark',
+      geoStatus,
+    }),
+    [location, setLocation, units, setUnits, theme, toggleTheme, geoStatus],
   )
 
   return createElement(AppContext.Provider, { value }, children)

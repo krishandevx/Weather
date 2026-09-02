@@ -1,13 +1,16 @@
 import { Sunrise, Sunset, CloudSun, MoonStar } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { useNow } from '../../hooks/useNow'
 import { clamp } from '../../lib/geometry'
 import { formatTime } from '../../lib/format'
+import { EASE } from '../../lib/motion'
 import Skeleton from '../ui/Skeleton'
 import styles from './sunrise.module.css'
 
 const CX = 150
 const CY = 132
 const R = 122
+const ARC_D = `M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`
 
 function posOnArc(fraction) {
   const angle = clamp(fraction, 0, 1) * Math.PI
@@ -40,6 +43,7 @@ export default function SunriseSunset({ sun, timezoneOffset, isLoading }) {
     : `Remaining daylight ${hoursMinutes(remainingMin)} of ${hoursMinutes(dayLenMin)}`
 
   const SunIcon = night ? MoonStar : CloudSun
+  const trackFraction = clamp(fraction, 0, 1)
 
   return (
     <div className={`${styles.wrap} ${night ? styles.night : ''}`}>
@@ -52,20 +56,29 @@ export default function SunriseSunset({ sun, timezoneOffset, isLoading }) {
         </defs>
 
         <path className={styles.dayArea} d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY} L ${CX + R} 0 L ${CX - R} 0 Z`} />
-        <path className={styles.arcBase} d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`} />
+
+        <path className={styles.arcBase} d={ARC_D} />
+
+        <motion.path
+          className={styles.sunTrack}
+          d={ARC_D}
+          pathLength="1"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: trackFraction, opacity: 1 }}
+          transition={{ duration: 1.4, ease: EASE }}
+        />
+
         <line x1={CX - R} y1={CY} x2={CX + R} y2={CY} className={styles.horizon} />
 
-        {inDay && (
-          <path
-            className={styles.sunTrack}
-            d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${pos.x} ${pos.y}`}
-          />
-        )}
-
-        <g transform={`translate(${pos.x} ${pos.y})`}>
+        <motion.g
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1, x: pos.x, y: pos.y }}
+          transition={{ duration: 1.0, ease: EASE, delay: 0.3 }}
+          style={{ originX: '0px', originY: '0px' }}
+        >
           {inDay && <circle r={13} className={styles.sunPulse} />}
           <circle r={7} className={styles.sunDot} />
-        </g>
+        </motion.g>
 
         <text x={CX - R} y={CY + 20} textAnchor="middle" className={styles.marker}>
           Sunrise

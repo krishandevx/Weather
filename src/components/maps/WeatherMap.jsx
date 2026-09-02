@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Radar, Map as MapIcon } from 'lucide-react'
-import Skeleton from '../ui/Skeleton'
+import { Radar, Map as MapIcon, LoaderCircle } from 'lucide-react'
 import styles from './map.module.css'
 
 const OSM_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -22,33 +21,43 @@ function accentColor() {
 }
 
 export default function WeatherMap({ place, isLoading }) {
-  const elRef = useRef(null)
   const mapRef = useRef(null)
   const layersRef = useRef(null)
   const radarRef = useRef(null)
   const [radarOn, setRadarOn] = useState(false)
   const [radarFailed, setRadarFailed] = useState(false)
+  const [radarLoading, setRadarLoading] = useState(false)
+  const [ready, setReady] = useState(false)
 
-  // Init the map once.
+  // Init the map once the container is actually mounted.
+  // A callback ref guarantees the container exists (it renders after the
+  // lazy-load completes), avoiding a dead empty map when the early render
+  // shows the skeleton instead.
+  const initRef = useRef(null)
+
+  // Init the map once the container mounts AND weather is loaded (so the
+  // container has final dimensions). The container is always rendered below;
+  // we only create the Leaflet instance here.
   useEffect(() => {
-    const el = elRef.current
-    if (!el || mapRef.current) return undefined
+    const el = initRef.current
+    if (!el || mapRef.current || isLoading) return undefined
     const map = L.map(el, { zoomControl: true, attributionControl: false })
     map.setView([place.lat, place.lon], 10)
     L.control.attribution({ prefix: false }).addTo(map)
     L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map)
     mapRef.current = map
+    setReady(true)
     return () => {
       map.remove()
       mapRef.current = null
+      setReady(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [isLoading, place.lat, place.lon])
 
   // Reposition + markers when the location changes.
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !place) return undefined
+    if (!ready || !map || !place) return undefined
     if (layersRef.current) layersRef.current.remove()
     layersRef.current = L.layerGroup().addTo(map)
     const color = accentColor()
@@ -73,13 +82,17 @@ export default function WeatherMap({ place, isLoading }) {
         layersRef.current = null
       }
     }
-  }, [place, place?.lat, place?.lon])
+  }, [ready, place, place?.lat, place?.lon])
 
   // Real precipitation radar overlay (free RainViewer public tiles).
   useEffect(() => {
-    if (!radarOn) return undefined
+    if (!radarOn || !ready) {
+      setRadarLoading(false)
+      return undefined
+    }
     let cancelled = false
     setRadarFailed(false)
+    setRadarLoading(true)
 
     const enable = async () => {
       try {
@@ -90,6 +103,7 @@ export default function WeatherMap({ place, isLoading }) {
         const frame = data.radar?.nowcast?.[0] ?? data.radar?.past?.[data.radar.past.length - 1]
         if (!frame) {
           setRadarFailed(true)
+          setRadarLoading(false)
           return
         }
         const url = `${data.host}${frame.path}/{z}/{x}/{y}/256/1_0/0/1_0.png`
@@ -98,8 +112,12 @@ export default function WeatherMap({ place, isLoading }) {
           zIndex: 500,
           maxZoom: RADAR_MAX_ZOOM,
         }).addTo(mapRef.current)
+        setRadarLoading(false)
       } catch {
-        if (!cancelled) setRadarFailed(true)
+        if (!cancelled) {
+          setRadarFailed(true)
+          setRadarLoading(false)
+        }
       }
     }
     enable()
@@ -110,15 +128,11 @@ export default function WeatherMap({ place, isLoading }) {
         radarRef.current = null
       }
     }
-  }, [radarOn])
-
-  if (isLoading) {
-    return <Skeleton height="22rem" />
-  }
+  }, [radarOn, ready])
 
   return (
     <div className={styles.mapCard}>
-      <div className={styles.mapContainer} ref={elRef} role="region" aria-label={`Map of ${place?.name ?? 'the selected location'}`} />
+      <div className={styles.mapContainer} ref={initRef} role="region" aria-label={`Map of ${place?.name ?? 'the selected location'}`} />
       <div className={styles.controls} role="group" aria-label="Map layers">
         <button
           type="button"
@@ -130,13 +144,18 @@ export default function WeatherMap({ place, isLoading }) {
         </button>
         <button
           type="button"
-          className={styles.ctrlBtn}
+          className={`${styles.ctrlBtn} ${radarLoading ? styles.ctrlBtnLoading : ''}`}
           aria-pressed={radarOn}
           onClick={() => setRadarOn(true)}
-          disabled={radarFailed}
+          disabled={radarFailed || radarLoading}
           title="Real-time precipitation radar"
         >
-          <Radar size={13} aria-hidden /> Radar
+          {radarLoading ? (
+            <LoaderCircle size={13} className={styles.spinIcon} aria-hidden />
+          ) : (
+            <Radar size={13} aria-hidden />
+          )}{' '}
+          Radar
         </button>
       </div>
       {radarFailed && (
@@ -144,7 +163,7 @@ export default function WeatherMap({ place, isLoading }) {
           Radar unavailable right now
         </span>
       )}
-      {radarOn && !radarFailed && (
+      {radarOn && !radarFailed && !radarLoading && (
         <div className={styles.mapRadarLegend} aria-hidden>
           {LEGEND.map((s) => (
             <span key={s.label} className={styles.legendRow}>
